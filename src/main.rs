@@ -32,5 +32,10 @@ fn main() {
         if let Some(func) = pkg.pre_install {
             let _ = func.call::<()>(());
         }
+
+        println!("Running postinstall script");
+        if let Some(func) = pkg.post_install {
+            let _ = func.call::<()>(());
+        }
     }
 }
