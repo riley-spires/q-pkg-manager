@@ -4,8 +4,11 @@ mod package;
 use std::process::exit;
 
 use config::Config;
+use mlua::Lua;
 
 fn main() {
+    let lua = Lua::new();
+
     let config = match Config::load() {
         Ok(c) => c,
         Err(e) => {
@@ -14,7 +17,7 @@ fn main() {
         }
     };
 
-    let pkgs = match package::get_packages(&config) {
+    let pkgs = match package::get_packages(&lua, &config) {
         Ok(p) => p,
         Err(e) => {
             eprintln!("ERROR: Failed to retrieve packages: {}", e);
@@ -24,5 +27,10 @@ fn main() {
 
     for pkg in pkgs {
         println!("Found pkg: {}", pkg.name);
+        println!("Running preinstall script");
+
+        if let Some(func) = pkg.pre_install {
+            let _ = func.call::<()>(());
+        }
     }
 }
