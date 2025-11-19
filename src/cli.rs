@@ -14,5 +14,12 @@ pub enum Commands {
     Install,
     /// List all packages known by q-pkg-manager
     #[command(visible_aliases = ["l", "ls"])]
-    List
+    List(ListArgs)
+}
+
+#[derive(Args)]
+struct ListArgs {
+    /// List only installed packages
+    #[arg(short, long, default_value_t = false)]
+    installed: bool
 }

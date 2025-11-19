@@ -5,7 +5,8 @@ use std::env::consts::OS;
 use std::fs::create_dir;
 
 pub struct Config {
-    pub packages: Vec<PathBuf> 
+    pub packages: Vec<PathBuf>,
+    pub config_dir: PathBuf
 }
 
 impl Config {
@@ -36,7 +37,8 @@ impl Config {
         let packages : Vec<PathBuf> = WalkDir::new(config_dir.join("packages")).into_iter().skip(1).filter_map(|e| e.ok()).map(|e| PathBuf::from(e.path())).collect();
 
         Ok(Self{
-            packages: packages
+            packages: packages,
+            config_dir: config_dir
         })
     }
 }

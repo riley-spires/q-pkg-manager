@@ -2,7 +2,7 @@ use std::process::Command;
 
 use crate::package::{Package, PackageType};
 
-pub fn install(pkg: &Package) -> Result<(), std::io::Error> {
+pub fn install(pkg: &Package) -> Result<bool, std::io::Error> {
     if let Some(func) = &pkg.pre_install {
         println!("Running preinstall script");
         let _ = func.call::<()>(());
@@ -29,7 +29,13 @@ pub fn install(pkg: &Package) -> Result<(), std::io::Error> {
             cmd.args(args);
 
             let mut child = cmd.spawn()?;
-            child.wait()?;
+            let ret_code = child.wait()?;
+
+            if let Some(ret_code) = ret_code.code() {
+                return Ok(ret_code == 0);
+            } else {
+                return Ok(false);
+            }
         }
         PackageType::Snap => {
             let mut cmd = Command::new("sudo");
