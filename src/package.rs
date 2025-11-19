@@ -2,13 +2,22 @@ use serde::Deserialize;
 
 use mlua::{FromLua, Function, Lua, LuaSerdeExt, Table};
 use crate::config::Config;
-use std::fs::read_to_string;
+use std::{fmt::Display, fs::read_to_string};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageType {
     Apt,
     Snap
+}
+
+impl Display for PackageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Apt => write!(f, "apt"),
+            Self::Snap => write!(f, "snap")
+        }
+    }
 }
 
 pub struct Package {
@@ -19,6 +28,7 @@ pub struct Package {
     pub pre_install: Option<Function>,
     pub post_install: Option<Function>
 }
+
 
 impl<'lua> FromLua for Package {
     fn from_lua(value: mlua::Value, lua: &Lua) -> mlua::Result<Self> {

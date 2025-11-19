@@ -1,5 +1,5 @@
 [package]
-name = "pkg-manager"
+name = "q-pkg-manager"
 version = "0.1.0"
 edition = "2021"
 
