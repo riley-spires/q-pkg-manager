@@ -29,7 +29,7 @@ impl<'lua> FromLua for Package {
         let name: String = table.get("name")?;
         let package_type: PackageType = lua.from_value(table.get("package_type")?)?;
         let version: Option<String> = table.get("version")?;
-        let channel: Option<String> = table.get("option")?;
+        let channel: Option<String> = table.get("channel")?;
         let pre_install: Option<Function> = table.get("pre_install")?;
         let post_install: Option<Function> = table.get("post_install")?;
 

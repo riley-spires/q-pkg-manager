@@ -1,7 +1,8 @@
 mod config;
 mod package;
+mod package_manager;
 
-use std::process::exit;
+use std::process::{exit};
 
 use config::Config;
 use mlua::Lua;
@@ -27,15 +28,12 @@ fn main() {
 
     for pkg in pkgs {
         println!("Found pkg: {}", pkg.name);
-        println!("Running preinstall script");
-
-        if let Some(func) = pkg.pre_install {
-            let _ = func.call::<()>(());
-        }
-
-        println!("Running postinstall script");
-        if let Some(func) = pkg.post_install {
-            let _ = func.call::<()>(());
+        match package_manager::install(&pkg) {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("ERROR: Failed to install {}: {}", &pkg.name, e);
+                exit(3);
+            }
         }
     }
 }
