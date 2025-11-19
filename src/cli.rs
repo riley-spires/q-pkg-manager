@@ -1,10 +1,10 @@
-use clap::{Parser, Args, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(about = "A simple package manager wrapper using lua", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands
+    pub command: Commands,
 }
 
 #[derive(Subcommand)]
@@ -14,12 +14,12 @@ pub enum Commands {
     Install,
     /// List all packages known by q-pkg-manager
     #[command(visible_aliases = ["l", "ls"])]
-    List(ListArgs)
+    List(ListArgs),
 }
 
 #[derive(Args)]
-struct ListArgs {
+pub struct ListArgs {
     /// List only installed packages
     #[arg(short, long, default_value_t = false)]
-    installed: bool
+    pub installed: bool,
 }

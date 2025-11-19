@@ -8,20 +8,20 @@ pub fn install(pkg: &Package) -> Result<bool, std::io::Error> {
         let _ = func.call::<()>(());
     }
 
-    println!("Installing {}", pkg.name);
-    match pkg.package_type {
+    println!("Installing {}", pkg.package_data.name);
+    let ret_code: Option<i32> = match pkg.package_data.package_type {
         PackageType::Apt => {
             let mut cmd = Command::new("sudo");
 
             let mut args: Vec<String> = Vec::from(["apt".to_string(), "install".to_string()]);
 
-            if let Some(version) = &pkg.version {
-                args.push(format!("{}={}", &pkg.name, version));
+            if let Some(version) = &pkg.package_data.version {
+                args.push(format!("{}={}", &pkg.package_data.name, version));
             } else {
-                args.push(pkg.name.clone());
+                args.push(pkg.package_data.name.clone());
             }
 
-            if let Some(_) = &pkg.channel {
+            if pkg.package_data.channel.is_some() {
                 eprintln!("WARNING: Channels are not supported for apt packages.");
                 eprintln!("Skipping channel argument");
             }
@@ -29,24 +29,24 @@ pub fn install(pkg: &Package) -> Result<bool, std::io::Error> {
             cmd.args(args);
 
             let mut child = cmd.spawn()?;
-            let ret_code = child.wait()?;
+            let exit_status = child.wait()?;
 
-            if let Some(ret_code) = ret_code.code() {
-                return Ok(ret_code == 0);
-            } else {
-                return Ok(false);
-            }
+            exit_status.code()
         }
         PackageType::Snap => {
             let mut cmd = Command::new("sudo");
-            let mut args: Vec<String> = Vec::from(["snap".to_string(), "install".to_string(), pkg.name.clone()]);
-            let mut channel_arg : String = "--channel=".to_string();
+            let mut args: Vec<String> = Vec::from([
+                "snap".to_string(),
+                "install".to_string(),
+                pkg.package_data.name.clone(),
+            ]);
+            let mut channel_arg: String = "--channel=".to_string();
 
-            if let Some(version) = &pkg.version {
+            if let Some(version) = &pkg.package_data.version {
                 channel_arg.push_str(format!("{}/", version).as_str());
             }
 
-            if let Some(channel) = &pkg.channel {
+            if let Some(channel) = &pkg.package_data.channel {
                 channel_arg.push_str(channel);
             } else {
                 channel_arg.push_str("stable");
@@ -58,14 +58,20 @@ pub fn install(pkg: &Package) -> Result<bool, std::io::Error> {
 
             let mut child = cmd.spawn()?;
 
-            child.wait()?;
+            let exit_status = child.wait()?;
+
+            exit_status.code()
         }
-    }
+    };
 
     if let Some(func) = &pkg.post_install {
         println!("Running postinstall script");
         let _ = func.call::<()>(());
     }
 
-    Ok(())
+    if let Some(ret_code) = ret_code {
+        Ok(ret_code == 0)
+    } else {
+        Ok(false)
+    }
 }

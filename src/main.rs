@@ -3,16 +3,16 @@ mod config;
 mod package;
 mod package_manager;
 
-use std::process::exit;
 use std::fs::{File};
 use std::io::prelude::*;
+use std::process::exit;
 
 use clap::Parser;
 use cli::{Cli, Commands};
 use config::Config;
 use mlua::Lua;
 
-use crate::package::Package;
+use crate::package::PackageData;
 
 fn main() {
     let lua = Lua::new();
@@ -36,17 +36,17 @@ fn main() {
 
     match &cli.command {
         Commands::Install => {
-            let mut installed_packages = Vec::<Package>::new();
+            let mut installed_packages = Vec::<PackageData>::new();
             for pkg in pkgs {
-                println!("Found pkg: {}", pkg.name);
+                println!("Found pkg: {}", pkg.package_data.name);
                 match package_manager::install(&pkg) {
                     Ok(good) => {
                         if good {
-                            installed_packages.push(pkg);
-                        } 
+                            installed_packages.push(pkg.package_data);
+                        }
                     }
                     Err(e) => {
-                        eprintln!("ERROR: Failed to install {}: {}", &pkg.name, e);
+                        eprintln!("ERROR: Failed to install {}: {}", &pkg.package_data.name, e);
                         exit(3);
                     }
                 }
@@ -70,7 +70,7 @@ fn main() {
 
                     if let Some(json) = json {
                         match file.write_all(json.as_bytes()) {
-                            Ok(_) => {},
+                            Ok(_) => {}
                             Err(_) => {
                                 eprintln!("WARNING: Failed to write to installed packages file. Expect limited functionality");
                             }
@@ -79,7 +79,13 @@ fn main() {
                 }
             }
         }
-        Commands::List => {
+        Commands::List(args) => {
+            let pkgs = if args.installed {
+                package::get_installed_packages(&config)
+            } else {
+                pkgs.iter().map(|pkg| pkg.package_data.clone()).collect()
+            };
+
             for pkg in pkgs {
                 let version = match pkg.version {
                     Some(v) => v,
