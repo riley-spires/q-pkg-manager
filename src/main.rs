@@ -47,7 +47,6 @@ fn main() {
                     }
                     Err(e) => {
                         eprintln!("ERROR: Failed to install {}: {}", &pkg.package_data.name, e);
-                        exit(3);
                     }
                 }
 

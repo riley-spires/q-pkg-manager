@@ -9,6 +9,7 @@ use std::{fmt::Display, fs::read_to_string};
 pub enum PackageType {
     Apt,
     Snap,
+    Brew
 }
 
 impl Display for PackageType {
@@ -16,6 +17,7 @@ impl Display for PackageType {
         match self {
             Self::Apt => write!(f, "apt"),
             Self::Snap => write!(f, "snap"),
+            Self::Brew => write!(f, "brew")
         }
     }
 }
