@@ -98,8 +98,8 @@ pub fn install(pkg: &Package) -> Result<bool> {
                 );
             }
 
-            let mut cmd = Command::new("sudo");
-            let mut args: Vec<String> = Vec::from(["brew".to_string(), "install".to_string()]);
+            let mut cmd = Command::new("brew");
+            let mut args: Vec<String> = Vec::from(["install".to_string()]);
             let mut version_arg: String = pkg.package_data.name.clone();
 
             if let Some(version) = &pkg.package_data.version {
@@ -107,6 +107,39 @@ pub fn install(pkg: &Package) -> Result<bool> {
             }
 
             args.push(version_arg);
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn brew child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for brew child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Winget => {
+            if os != Type::Windows {
+                eprintln!("ERROR: Brew is not supported on non-windows machines");
+                bail!(
+                    "Invalid os ({}) for winget package: {}",
+                    os,
+                    &pkg.package_data.name
+                );
+            }
+
+            let mut cmd = Command::new("winget");
+            let mut args: Vec<String> =
+                Vec::from(["install".to_string(), pkg.package_data.name.clone()]);
+
+            if let Some(version) = &pkg.package_data.version {
+                args.push(format!("--version {}", version));
+            }
+
+            if pkg.package_data.channel.is_some() {
+                eprintln!("WARNING: Channels are not supported for winget packages");
+                eprintln!("Skipping channel argument");
+            }
+
             cmd.args(args);
 
             let mut child = cmd.spawn().context("Failed to spawn brew child")?;

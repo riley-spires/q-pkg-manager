@@ -10,6 +10,7 @@ pub enum PackageType {
     Apt,
     Snap,
     Brew,
+    Winget,
 }
 
 impl Display for PackageType {
@@ -18,6 +19,7 @@ impl Display for PackageType {
             Self::Apt => write!(f, "apt"),
             Self::Snap => write!(f, "snap"),
             Self::Brew => write!(f, "brew"),
+            Self::Winget => write!(f, "winget"),
         }
     }
 }
