@@ -16,9 +16,9 @@ pub enum Commands {
     #[command(visible_aliases = ["l", "ls"])]
     List(ListArgs),
 
-    /// Uninstall packages that are no longer outlined within your config/packages directory 
+    /// Uninstall packages that are no longer outlined within your config/packages directory
     #[command(visible_aliases = ["rm", "remove", "uninstall", "p"])]
-    Purge
+    Purge,
 }
 
 #[derive(Args)]

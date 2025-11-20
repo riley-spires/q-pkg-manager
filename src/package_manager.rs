@@ -171,11 +171,7 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
         PackageType::Apt => {
             if os != Type::Pop && os != Type::Debian && os != Type::Ubuntu {
                 eprintln!("Error: Apt is not supported on non-debian based machines");
-                bail!(
-                    "Invalid os ({}) for apt package: {}",
-                    os,
-                    &pkg.name
-                );
+                bail!("Invalid os ({}) for apt package: {}", os, &pkg.name);
             }
 
             let mut cmd = Command::new("sudo");
@@ -205,19 +201,12 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
         PackageType::Snap => {
             if os != Type::Ubuntu {
                 eprintln!("ERROR: Snap is not supported on non-ubuntu machines");
-                bail!(
-                    "Invalid os ({}) for snap package: {}",
-                    os,
-                    &pkg.name
-                );
+                bail!("Invalid os ({}) for snap package: {}", os, &pkg.name);
             }
 
             let mut cmd = Command::new("sudo");
-            let args: Vec<String> = Vec::from([
-                "snap".to_string(),
-                "remove".to_string(),
-                pkg.name.clone(),
-            ]);
+            let args: Vec<String> =
+                Vec::from(["snap".to_string(), "remove".to_string(), pkg.name.clone()]);
 
             cmd.args(args);
 
@@ -232,11 +221,7 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
         PackageType::Brew => {
             if os != Type::Macos {
                 eprintln!("ERROR: Brew is not supported on non-mac machines");
-                bail!(
-                    "Invalid os ({}) for brew package: {}",
-                    os,
-                    &pkg.name
-                );
+                bail!("Invalid os ({}) for brew package: {}", os, &pkg.name);
             }
 
             let mut cmd = Command::new("brew");
@@ -255,16 +240,11 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
         PackageType::Winget => {
             if os != Type::Windows {
                 eprintln!("ERROR: Brew is not supported on non-windows machines");
-                bail!(
-                    "Invalid os ({}) for winget package: {}",
-                    os,
-                    &pkg.name
-                );
+                bail!("Invalid os ({}) for winget package: {}", os, &pkg.name);
             }
 
             let mut cmd = Command::new("winget");
-            let mut args: Vec<String> =
-                Vec::from(["uninstall".to_string(), pkg.name.clone()]);
+            let mut args: Vec<String> = Vec::from(["uninstall".to_string(), pkg.name.clone()]);
 
             if let Some(version) = &pkg.version {
                 args.push(format!("--version {}", version));
@@ -292,5 +272,4 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
     } else {
         Ok(false)
     }
-   
 }

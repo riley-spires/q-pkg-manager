@@ -106,10 +106,10 @@ fn main() {
             let mut uninstalled_pkgs = Vec::<PackageData>::new();
 
             for pkg_data in &installed_pkgs {
-                if pkgs.iter().find(|p| p.package_data == *pkg_data).is_some() {
+                if pkgs.iter().any(|p| p.package_data == *pkg_data) {
                     continue;
                 }
-                match package_manager::uninstall(&pkg_data) {
+                match package_manager::uninstall(pkg_data) {
                     Ok(b) => {
                         if b {
                             println!("Successfully uninstalled {}", pkg_data.name);
