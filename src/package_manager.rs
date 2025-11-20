@@ -39,6 +39,8 @@ pub fn install(pkg: &Package) -> Result<bool> {
                 eprintln!("Skipping channel argument");
             }
 
+            args.push("-y".to_string());
+
             cmd.args(args);
 
             let mut child = cmd.spawn().context("Failed to spawn sudo apt child")?;
@@ -188,6 +190,8 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
                 eprintln!("WARNING: Channels are not supported for apt packages.");
                 eprintln!("Skipping channel argument");
             }
+
+            args.push("-y".to_string());
 
             cmd.args(args);
 
