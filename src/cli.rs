@@ -9,12 +9,16 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Install packages outlined in lua files within your config directory
+    /// Install packages outlined in lua files within your config/packages directory
     #[command(visible_aliases = ["i", "add"])]
     Install,
     /// List all packages known by q-pkg-manager
     #[command(visible_aliases = ["l", "ls"])]
     List(ListArgs),
+
+    /// Uninstall packages that are no longer outlined within your config/packages directory 
+    #[command(visible_aliases = ["rm", "remove", "uninstall", "p"])]
+    Purge
 }
 
 #[derive(Args)]

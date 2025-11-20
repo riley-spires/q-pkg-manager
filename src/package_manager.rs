@@ -1,7 +1,7 @@
 use os_info::{get, Type};
 use std::process::Command;
 
-use crate::package::{Package, PackageType};
+use crate::package::{Package, PackageData, PackageType};
 
 use anyhow::{bail, Context, Result};
 
@@ -162,4 +162,135 @@ pub fn install(pkg: &Package) -> Result<bool> {
     } else {
         Ok(false)
     }
+}
+
+pub fn uninstall(pkg: &PackageData) -> Result<bool> {
+    println!("Uninstalling {}", pkg.name);
+    let os = get().os_type();
+    let ret_code: Option<i32> = match pkg.package_type {
+        PackageType::Apt => {
+            if os != Type::Pop && os != Type::Debian && os != Type::Ubuntu {
+                eprintln!("Error: Apt is not supported on non-debian based machines");
+                bail!(
+                    "Invalid os ({}) for apt package: {}",
+                    os,
+                    &pkg.name
+                );
+            }
+
+            let mut cmd = Command::new("sudo");
+
+            let mut args: Vec<String> = Vec::from(["apt".to_string(), "remove".to_string()]);
+
+            if let Some(version) = &pkg.version {
+                args.push(format!("{}={}", &pkg.name, version));
+            } else {
+                args.push(pkg.name.clone());
+            }
+
+            if pkg.channel.is_some() {
+                eprintln!("WARNING: Channels are not supported for apt packages.");
+                eprintln!("Skipping channel argument");
+            }
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn sudo apt child")?;
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for sudo apt child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Snap => {
+            if os != Type::Ubuntu {
+                eprintln!("ERROR: Snap is not supported on non-ubuntu machines");
+                bail!(
+                    "Invalid os ({}) for snap package: {}",
+                    os,
+                    &pkg.name
+                );
+            }
+
+            let mut cmd = Command::new("sudo");
+            let args: Vec<String> = Vec::from([
+                "snap".to_string(),
+                "remove".to_string(),
+                pkg.name.clone(),
+            ]);
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn sudo snap child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for sudo snap child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Brew => {
+            if os != Type::Macos {
+                eprintln!("ERROR: Brew is not supported on non-mac machines");
+                bail!(
+                    "Invalid os ({}) for brew package: {}",
+                    os,
+                    &pkg.name
+                );
+            }
+
+            let mut cmd = Command::new("brew");
+            let args: Vec<String> = Vec::from(["uninstall".to_string(), pkg.name.clone()]);
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn brew child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for brew child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Winget => {
+            if os != Type::Windows {
+                eprintln!("ERROR: Brew is not supported on non-windows machines");
+                bail!(
+                    "Invalid os ({}) for winget package: {}",
+                    os,
+                    &pkg.name
+                );
+            }
+
+            let mut cmd = Command::new("winget");
+            let mut args: Vec<String> =
+                Vec::from(["uninstall".to_string(), pkg.name.clone()]);
+
+            if let Some(version) = &pkg.version {
+                args.push(format!("--version {}", version));
+            }
+
+            if pkg.channel.is_some() {
+                eprintln!("WARNING: Channels are not supported for winget packages");
+                eprintln!("Skipping channel argument");
+            }
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn brew child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for brew child to finish")?;
+
+            exit_status.code()
+        }
+    };
+
+    if let Some(ret_code) = ret_code {
+        Ok(ret_code == 0)
+    } else {
+        Ok(false)
+    }
+   
 }

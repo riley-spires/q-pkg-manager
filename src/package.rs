@@ -4,7 +4,7 @@ use crate::config::Config;
 use mlua::{FromLua, Function, Lua, LuaSerdeExt, Table};
 use std::{fmt::Display, fs::read_to_string};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageType {
     Apt,
@@ -24,7 +24,7 @@ impl Display for PackageType {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct PackageData {
     pub name: String,
     pub package_type: PackageType,
