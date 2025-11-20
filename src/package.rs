@@ -9,7 +9,7 @@ use std::{fmt::Display, fs::read_to_string};
 pub enum PackageType {
     Apt,
     Snap,
-    Brew
+    Brew,
 }
 
 impl Display for PackageType {
@@ -17,7 +17,7 @@ impl Display for PackageType {
         match self {
             Self::Apt => write!(f, "apt"),
             Self::Snap => write!(f, "snap"),
-            Self::Brew => write!(f, "brew")
+            Self::Brew => write!(f, "brew"),
         }
     }
 }
@@ -93,7 +93,7 @@ pub fn get_packages(lua: &Lua, config: &Config) -> Result<Vec<Package>, String> 
 pub fn get_installed_packages(config: &Config) -> Vec<PackageData> {
     let json_raw = match read_to_string(config.config_dir.join("installed_packages.json")) {
         Ok(s) => s,
-        Err(_) => return vec!()
+        Err(_) => return vec![],
     };
 
     serde_json::from_str(&json_raw).unwrap_or_default()

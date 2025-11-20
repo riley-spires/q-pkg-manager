@@ -34,6 +34,22 @@ impl Config {
             .skip(1)
             .filter_map(|e| e.ok())
             .map(|e| PathBuf::from(e.path()))
+            .filter(|p| {
+                if p.extension()
+                    .unwrap_or_default()
+                    .to_str()
+                    .unwrap_or_default()
+                    == "lua"
+                {
+                    true
+                } else {
+                    eprintln!(
+                        "WARNING: Found non-lua file {} in packages directory. Ignoring it.",
+                        p.display()
+                    );
+                    false
+                }
+            })
             .collect();
 
         Ok(Self {

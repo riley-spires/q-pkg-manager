@@ -3,7 +3,7 @@ mod config;
 mod package;
 mod package_manager;
 
-use std::fs::{File};
+use std::fs::File;
 use std::io::prelude::*;
 use std::process::exit;
 
