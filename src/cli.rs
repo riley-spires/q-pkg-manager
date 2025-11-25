@@ -12,7 +12,7 @@ pub enum Commands {
     /// Install packages outlined in lua files within your config/packages directory
     #[command(visible_aliases = ["i", "add"])]
     Install,
-    /// List all packages known by q-pkg-manager
+    /// List all packages known by nexus
     #[command(visible_aliases = ["l", "ls"])]
     List(ListArgs),
 
@@ -20,7 +20,7 @@ pub enum Commands {
     #[command(visible_aliases = ["rm", "remove", "uninstall", "p", "r"])]
     Purge,
 
-    /// Update all managed packages
+    /// Update all installed packages known by nexus
     #[command(visible_aliases = ["upgrade", "u", "refresh"])]
     Update,
 }

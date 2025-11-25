@@ -12,10 +12,10 @@ pub struct Config {
 impl Config {
     pub fn load() -> Result<Self, String> {
         let config_dir = if let Some(path) = config_dir() {
-            path.join("q-pkg-manager")
+            path.join("nexus")
         } else {
             match OS {
-                "linux" => Path::new("/opt/q-pkg-manager").to_path_buf(),
+                "linux" => Path::new("/opt/nexus").to_path_buf(),
                 _ => todo!(),
             }
         };
