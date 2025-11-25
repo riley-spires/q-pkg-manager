@@ -36,9 +36,15 @@ fn main() {
 
     match &cli.command {
         Commands::Install => {
-            let mut installed_packages = Vec::<PackageData>::new();
+            let mut installed_packages = package::get_installed_packages(&config);
             for pkg in pkgs {
+                if installed_packages.iter().any(|p| pkg.package_data.hash == p.hash) {
+                    println!("{}: Skipped because of same hash", pkg.package_data.name);
+                    continue;
+                }
+
                 println!("Found pkg: {}", pkg.package_data.name);
+
                 match package_manager::install(&pkg) {
                     Ok(good) => {
                         if good {

@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
+use sha2::{Sha256, Digest};
+use mlua::{FromLua, Function, Lua, LuaSerdeExt, Table};
+
+use std::fmt::Display;
+use std::fs::{File, read_to_string};
+use std::io;
 
 use crate::config::Config;
-use mlua::{FromLua, Function, Lua, LuaSerdeExt, Table};
-use std::{fmt::Display, fs::read_to_string};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -30,6 +34,7 @@ pub struct PackageData {
     pub package_type: PackageType,
     pub version: Option<String>,
     pub channel: Option<String>,
+    pub hash: String,
 }
 
 #[derive(Clone)]
@@ -41,7 +46,16 @@ pub struct Package {
 
 impl FromLua for Package {
     fn from_lua(value: mlua::Value, lua: &Lua) -> mlua::Result<Self> {
-        // let data: PackageData = lua.from_value(value.clone())?;
+        let path_wrapper = lua.app_data_ref::<FilePathAppData>().ok_or_else(|| mlua::Error::RuntimeError("Context Error: Don't have filepath to compute hash".to_string()))?;
+
+        let path = &path_wrapper.0;
+
+        let mut file = File::open(path)?;
+        let mut hasher = Sha256::new();
+
+        io::copy(&mut file, &mut hasher)?;
+
+        let hash = format!("{:x}", hasher.finalize());
 
         let table: Table = Table::from_lua(value.clone(), lua)?;
 
@@ -52,18 +66,23 @@ impl FromLua for Package {
         let pre_install: Option<Function> = table.get("pre_install")?;
         let post_install: Option<Function> = table.get("post_install")?;
 
+        
+
         Ok(Self {
             package_data: PackageData {
                 name,
                 package_type,
                 version,
                 channel,
+                hash
             },
             pre_install,
             post_install,
         })
     }
 }
+
+struct FilePathAppData(pub String);
 
 pub fn get_packages(lua: &Lua, config: &Config) -> Result<Vec<Package>, String> {
     let mut packages = Vec::<Package>::new();
@@ -76,6 +95,8 @@ pub fn get_packages(lua: &Lua, config: &Config) -> Result<Vec<Package>, String> 
             }
         };
 
+        lua.set_app_data(FilePathAppData(path.display().to_string()));
+
         let pkg: Package = match lua.load(f).eval() {
             Ok(t) => t,
             Err(_) => {
@@ -85,6 +106,8 @@ pub fn get_packages(lua: &Lua, config: &Config) -> Result<Vec<Package>, String> 
                 ));
             }
         };
+
+        lua.remove_app_data::<FilePathAppData>();
 
         packages.push(pkg);
     }
