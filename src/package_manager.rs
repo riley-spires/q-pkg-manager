@@ -277,3 +277,114 @@ pub fn uninstall(pkg: &PackageData) -> Result<bool> {
         Ok(false)
     }
 }
+
+pub fn update(pkg: &PackageData) -> Result<bool> {
+    println!("Updating {}", pkg.name);
+
+    if pkg.version.is_some() {
+        bail!("Cannot update version locked package");
+    }
+
+    let os = get().os_type();
+    let ret_code: Option<i32> = match pkg.package_type {
+        PackageType::Apt => {
+            if os != Type::Pop && os != Type::Debian && os != Type::Ubuntu {
+                eprintln!("Error: Apt is not supported on non-debian based machines");
+                bail!("Invalid os ({}) for apt package: {}", os, &pkg.name);
+            }
+
+            let mut cmd = Command::new("sudo");
+
+            let args: Vec<String> = Vec::from([
+                "apt".to_string(),
+                "install".to_string(),
+                "--only-upgrade".to_string(),
+                pkg.name.clone(),
+                "-y".to_string(),
+            ]);
+
+            if pkg.channel.is_some() {
+                eprintln!("WARNING: Channels are not supported for apt packages.");
+                eprintln!("Skipping channel argument");
+            }
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn sudo apt child")?;
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for sudo apt child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Snap => {
+            if os != Type::Ubuntu {
+                eprintln!("ERROR: Snap is not supported on non-ubuntu machines");
+                bail!("Invalid os ({}) for snap package: {}", os, &pkg.name);
+            }
+
+            let mut cmd = Command::new("sudo");
+            let args: Vec<String> =
+                Vec::from(["snap".to_string(), "refresh".to_string(), pkg.name.clone()]);
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn sudo snap child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for sudo snap child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Brew => {
+            if os != Type::Macos {
+                eprintln!("ERROR: Brew is not supported on non-mac machines");
+                bail!("Invalid os ({}) for brew package: {}", os, &pkg.name);
+            }
+
+            let mut cmd = Command::new("brew");
+            let args: Vec<String> = Vec::from(["upgrade".to_string(), pkg.name.clone()]);
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn brew child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for brew child to finish")?;
+
+            exit_status.code()
+        }
+        PackageType::Winget => {
+            if os != Type::Windows {
+                eprintln!("ERROR: Winget is not supported on non-windows machines");
+                bail!("Invalid os ({}) for winget package: {}", os, &pkg.name);
+            }
+
+            let mut cmd = Command::new("winget");
+            let args: Vec<String> = Vec::from(["upgrade".to_string(), pkg.name.clone()]);
+
+            if pkg.channel.is_some() {
+                eprintln!("WARNING: Channels are not supported for winget packages");
+                eprintln!("Skipping channel argument");
+            }
+
+            cmd.args(args);
+
+            let mut child = cmd.spawn().context("Failed to spawn winget child")?;
+
+            let exit_status = child
+                .wait()
+                .context("Failed to wait for winget child to finish")?;
+
+            exit_status.code()
+        }
+    };
+
+    if let Some(ret_code) = ret_code {
+        Ok(ret_code == 0)
+    } else {
+        Ok(false)
+    }
+}

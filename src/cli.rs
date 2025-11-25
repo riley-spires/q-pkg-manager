@@ -17,8 +17,12 @@ pub enum Commands {
     List(ListArgs),
 
     /// Uninstall packages that are no longer outlined within your config/packages directory
-    #[command(visible_aliases = ["rm", "remove", "uninstall", "p"])]
+    #[command(visible_aliases = ["rm", "remove", "uninstall", "p", "r"])]
     Purge,
+
+    /// Update all managed packages
+    #[command(visible_aliases = ["upgrade", "u", "refresh"])]
+    Update,
 }
 
 #[derive(Args)]

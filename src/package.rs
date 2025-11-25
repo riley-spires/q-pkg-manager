@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
-use sha2::{Sha256, Digest};
 use mlua::{FromLua, Function, Lua, LuaSerdeExt, Table};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use std::fmt::Display;
-use std::fs::{File, read_to_string};
+use std::fs::{read_to_string, File};
 use std::io;
 
 use crate::config::Config;
@@ -46,7 +46,11 @@ pub struct Package {
 
 impl FromLua for Package {
     fn from_lua(value: mlua::Value, lua: &Lua) -> mlua::Result<Self> {
-        let path_wrapper = lua.app_data_ref::<FilePathAppData>().ok_or_else(|| mlua::Error::RuntimeError("Context Error: Don't have filepath to compute hash".to_string()))?;
+        let path_wrapper = lua.app_data_ref::<FilePathAppData>().ok_or_else(|| {
+            mlua::Error::RuntimeError(
+                "Context Error: Don't have filepath to compute hash".to_string(),
+            )
+        })?;
 
         let path = &path_wrapper.0;
 
@@ -66,15 +70,13 @@ impl FromLua for Package {
         let pre_install: Option<Function> = table.get("pre_install")?;
         let post_install: Option<Function> = table.get("post_install")?;
 
-        
-
         Ok(Self {
             package_data: PackageData {
                 name,
                 package_type,
                 version,
                 channel,
-                hash
+                hash,
             },
             pre_install,
             post_install,

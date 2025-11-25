@@ -38,7 +38,10 @@ fn main() {
         Commands::Install => {
             let mut installed_packages = package::get_installed_packages(&config);
             for pkg in pkgs {
-                if installed_packages.iter().any(|p| pkg.package_data.hash == p.hash) {
+                if installed_packages
+                    .iter()
+                    .any(|p| pkg.package_data.hash == p.hash)
+                {
                     println!("{}: Skipped because of same hash", pkg.package_data.name);
                     continue;
                 }
@@ -164,6 +167,28 @@ fn main() {
                         }
                     }
                 }
+            }
+        }
+        Commands::Update => {
+            let installed_packages = package::get_installed_packages(&config);
+
+            for pkg_data in installed_packages {
+                if pkg_data.version.is_some() {
+                    continue;
+                }
+
+                match package_manager::update(&pkg_data) {
+                    Ok(b) => {
+                        if b {
+                            println!("Successfully updated {}", &pkg_data.name);
+                        } else {
+                            eprintln!("Failed to update: {}. Not sure why...", &pkg_data.name);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to update: {} {}", &pkg_data.name, e);
+                    }
+                };
             }
         }
     }
